@@ -51,11 +51,22 @@ hip_center = Point('HipCenter')
 hip_right = Point('HipRight')
 knee_right = Point('KneeRight')
 ankle_right = Point('AnkleRight')
+lighthouse_sensor = []
+lighthouse_sensor.append(Point('lighthouse_sensor0'))
+lighthouse_sensor.append(Point('lighthouse_sensor1'))
+lighthouse_sensor.append(Point('lighthouse_sensor2'))
+lighthouse_sensor.append(Point('lighthouse_sensor3'))
+lighthouse_sensor.append(Point('lighthouse_sensor4'))
+lighthouse_sensor.append(Point('lighthouse_sensor5'))
+lighthouse_sensor.append(Point('lighthouse_sensor6'))
+lighthouse_sensor.append(Point('lighthouse_sensor7'))
+lighthouse_sensor.append(Point('lighthouse_sensor8'))
 
 # here go the lengths of your robots links
 lower_leg_length, upper_leg_length, hip_length = symbols('l1, l2, l3')
+ankle_x, ankle_y, ankle_z = symbols('ankle_x, ankle_y, ankle_z')
 
-ankle_left.set_pos(origin, (0 * inertial_frame.y)+(0 * inertial_frame.x))
+ankle_left.set_pos(origin, (ankle_x * inertial_frame.x)+(ankle_y * inertial_frame.y))
 #ankle_left.pos_from(origin).express(inertial_frame).simplify()
 
 knee_left.set_pos(ankle_left, lower_leg_length * lower_leg_left_frame.y)
@@ -75,6 +86,36 @@ knee_right.set_pos(hip_right, upper_leg_length * -upper_leg_right_frame.y)
 
 ankle_right.set_pos(knee_right, lower_leg_length * -lower_leg_right_frame.y)
 #ankle_right.pos_from(origin).express(inertial_frame).simplify()
+
+lighthouse_sensor[0].set_pos(ankle_left, 0.09 * lower_leg_left_frame.y)
+lighthouse_sensor[1].set_pos(knee_left, 0.1 * upper_leg_left_frame.y)
+lighthouse_sensor[2].set_pos(knee_left, 0.21 * upper_leg_left_frame.y)
+lighthouse_sensor[3].set_pos(hip_left,  (-0.1 * hip_frame.x)+(0.05 * hip_frame.y))
+lighthouse_sensor[4].set_pos(hip_left, (hip_length/2 * hip_frame.x)+(0.02 * hip_frame.y))
+lighthouse_sensor[5].set_pos(hip_right, (0.1 * hip_frame.x)+(0.05 * hip_frame.y))
+lighthouse_sensor[6].set_pos(knee_right, 0.21 * upper_leg_right_frame.y)
+lighthouse_sensor[7].set_pos(knee_right, 0.1 * upper_leg_right_frame.y)
+lighthouse_sensor[8].set_pos(ankle_right, 0.09 * lower_leg_right_frame.y)
+lighthouse_frame = []
+lighthouse_frame.append(lower_leg_left_frame)
+lighthouse_frame.append(upper_leg_left_frame)
+lighthouse_frame.append(upper_leg_left_frame)
+lighthouse_frame.append(hip_frame)
+lighthouse_frame.append(hip_frame)
+lighthouse_frame.append(hip_frame)
+lighthouse_frame.append(upper_leg_right_frame)
+lighthouse_frame.append(upper_leg_right_frame)
+lighthouse_frame.append(lower_leg_right_frame)
+
+particles = []
+particles.append(Particle('ankle_left', ankle_left, 0))
+particles.append(Particle('knee_left', knee_left, 0))
+particles.append(Particle('hip_left', hip_left, 0))
+particles.append(Particle('hip_center', hip_center, 0))
+particles.append(Particle('hip_right', hip_right, 0))
+particles.append(Particle('knee_right', knee_right, 0))
+particles.append(Particle('ankle_right', ankle_right, 0))
+particles
 
 #%%
 # The following defines the full robots kinematics, if you only want to do 
@@ -213,17 +254,6 @@ upper_leg_right = RigidBody('Upper Leg Right', upper_leg_right_mass_center, uppe
 
 lower_leg_right = RigidBody('Lower Leg Right', lower_leg_right_mass_center, lower_leg_right_frame, lower_leg_mass, lower_leg_right_central_inertia)
 
-
-particles = []
-particles.append(Particle('ankle_left', ankle_left, 0))
-particles.append(Particle('knee_left', knee_left, 0))
-particles.append(Particle('hip_left', hip_left, 0))
-particles.append(Particle('hip_center', hip_center, 0))
-particles.append(Particle('hip_right', hip_right, 0))
-particles.append(Particle('knee_right', knee_right, 0))
-particles.append(Particle('ankle_right', ankle_right, 0))
-particles
-
 mass_centers = []
 mass_centers.append(Particle('lower_leg_left_mass_center', lower_leg_left_mass_center, lower_leg_mass))
 mass_centers.append(Particle('upper_leg_left_mass_center', upper_leg_left_mass_center, upper_leg_mass))
@@ -287,16 +317,16 @@ loads
 bodies = [lower_leg_left, upper_leg_left, hip, upper_leg_right, lower_leg_right]
 bodies
 
-print("evaluating kanes equation")
-fr, frstar = kane.kanes_equations(loads, bodies)
-
-#print("simplifying kanes equation")
-#trigsimp(fr + frstar)
-
-print("simplifying mass_matrix")
-mass_matrix = trigsimp(kane.mass_matrix_full)
-#print(mass_matrix)
-
-print("simplifying forcing_vector")
-forcing_vector = trigsimp(kane.forcing_full)
-#print(forcing_vector)
+#print("evaluating kanes equation")
+#fr, frstar = kane.kanes_equations(loads, bodies)
+#
+##print("simplifying kanes equation")
+##trigsimp(fr + frstar)
+#
+#print("simplifying mass_matrix")
+#mass_matrix = trigsimp(kane.mass_matrix_full)
+##print(mass_matrix)
+#
+#print("simplifying forcing_vector")
+#forcing_vector = trigsimp(kane.forcing_full)
+##print(forcing_vector)

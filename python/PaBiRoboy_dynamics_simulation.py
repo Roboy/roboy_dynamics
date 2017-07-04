@@ -13,6 +13,9 @@ constants = [lower_leg_length,
              upper_leg_length,
              hip_length,
              
+             ankle_x,
+             ankle_y,
+             
              lower_leg_mass,
              upper_leg_mass,
              hip_mass,
@@ -24,9 +27,12 @@ constants = [lower_leg_length,
              g]
 constants
 
-numerical_constants = array([0.42,  # lower_leg_length [m]
-                             0.54, # upper_leg_length [m]
-                             0.2, # hip_length
+numerical_constants = array([0.32,  # lower_leg_length [m]
+                             0.40, # upper_leg_length [m]
+                             0.18, # hip_length
+                             
+                             0,
+                             0,
                                                           
                              1.0,  # lower_leg_mass [kg]
                              1.5,  # upper_leg_mass [kg]
@@ -70,9 +76,29 @@ F1
 #%%
 J_hipCenter = F1.jacobian([theta0, theta1, theta2, theta3, phi])
 J_hipCenter
+#%% Jacobian for the hip center lighthouse sensor
+F1 = lighthouse_sensor[4].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+F1 = Matrix([F1[0], F1[1]])
+F1
+#%%
+J_hipCenter = F1.jacobian([theta0, theta1, theta2, theta3, phi])
+J_hipCenter
 #%% we stack the two jacobians
 J = J_ankleRight.col_join(J_hipCenter)
 J.shape
+#%% sensor jacobians
+J_lighthouse_sensors = []
+J_lighthouse_sensors.append(lighthouse_sensor[0].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[1].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[2].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[3].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[4].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[5].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[6].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[7].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+J_lighthouse_sensors.append(lighthouse_sensor[8].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
+#%%
+J_lighthouse_sensors[0]
 #%% lets try the pseudo inverse with a couple of real values
 values = {lower_leg_length: 0.4, upper_leg_length: 0.54, hip_length: 0.2, theta0: x0[0], theta1: x0[1], theta2: x0[2], theta3: x0[3], phi: x0[4]}
 Jpinv = J.subs(values).evalf().pinv()
@@ -147,9 +173,10 @@ def right_hand_side(x, t, args):
     global i
     r = 0.0                                  # The input force is always zero     
     arguments = np.hstack((x, args))      # States, input, and parameters
-    values = {lower_leg_length: 0.4, upper_leg_length: 0.54, hip_length: 0.2, 
+    values = {lower_leg_length: 0.32, upper_leg_length: 0.4, hip_length: 0.18, 
               theta0: x[0], theta1: x[1], theta2: x[2], theta3: x[3], phi: x[4],
-                omega0: 0, omega1: 0, omega2: 0, omega3: 0, psi: 0}
+                omega0: 0, omega1: 0, omega2: 0, omega3: 0, psi: 0,
+                ankle_x: 0, ankle_y: 0}
     Jpinv = J.subs(values).evalf().pinv()
     ## use this for nullspace movements
     # N=np.eye(4)-Jpinv*J.subs(values).evalf()
@@ -212,7 +239,7 @@ for i, (body, particle, mass_center) in enumerate(zip(bodies, particles, mass_ce
     #                                             body_shape))
             
     particle_shape = Sphere(name='sphere{}'.format(i),
-                            radius=0.06,
+                            radius=0.03,
                             color=colors[i])
                             
     
@@ -229,6 +256,15 @@ for i, (body, particle, mass_center) in enumerate(zip(bodies, particles, mass_ce
                                          body.frame,
                                          mass_center,
                                          mass_center_shape))
+                                         
+for i, (sensor, frame) in enumerate(zip(lighthouse_sensor, lighthouse_frame)):
+     particle_shape = Sphere(name='sensor{}'.format(i),
+                            radius=0.04,
+                            color='blue')
+     viz_frames.append(VisualizationFrame('sensor_frame{}'.format(i),
+                                         frame,
+                                         sensor,
+                                         particle_shape))                       
                                              
 target_shape = Sphere(name='sphere{}'.format(i),
                             radius=0.02,
@@ -261,9 +297,39 @@ hc = hip_center.pos_from(origin).express(inertial_frame).simplify().to_matrix(in
 hr = hip_right.pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
 k1 = knee_right.pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
 a1 = ankle_right.pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+
+s0 = lighthouse_sensor[0].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s1 = lighthouse_sensor[1].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s2 = lighthouse_sensor[2].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s3 = lighthouse_sensor[3].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s4 = lighthouse_sensor[4].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s5 = lighthouse_sensor[5].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s6 = lighthouse_sensor[6].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s7 = lighthouse_sensor[7].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+s8 = lighthouse_sensor[8].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
+
+ja1 = ankle_right.pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi])
+
 [(c_name, c_code), (h_name, c_header)] = codegen( 
-    [("Jacobian",J), 
-     ("ankle_right_hip_center",F2), 
+    [("J_lighthouse_sensor0",J_lighthouse_sensors[0]), 
+     ("J_lighthouse_sensor1",J_lighthouse_sensors[1]),  
+     ("J_lighthouse_sensor2",J_lighthouse_sensors[2]),  
+     ("J_lighthouse_sensor3",J_lighthouse_sensors[3]),  
+     ("J_lighthouse_sensor4",J_lighthouse_sensors[4]),  
+     ("J_lighthouse_sensor5",J_lighthouse_sensors[5]),  
+     ("J_lighthouse_sensor6",J_lighthouse_sensors[6]),  
+     ("J_lighthouse_sensor7",J_lighthouse_sensors[7]),  
+     ("J_lighthouse_sensor8",J_lighthouse_sensors[8]), 
+     ("J_ankle_right",ja1), 
+     ("lighthouse_sensor0",s0), 
+     ("lighthouse_sensor1",s1),  
+     ("lighthouse_sensor2",s2),  
+     ("lighthouse_sensor3",s3),  
+     ("lighthouse_sensor4",s4),  
+     ("lighthouse_sensor5",s5),  
+     ("lighthouse_sensor6",s6),  
+     ("lighthouse_sensor7",s7),  
+     ("lighthouse_sensor8",s8), 
      ("ankle_left", a0),
      ("knee_left", k0),
      ("hip_left", hl),
