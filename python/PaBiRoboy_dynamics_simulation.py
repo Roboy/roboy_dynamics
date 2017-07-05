@@ -55,7 +55,7 @@ x0[0] = -deg2rad(80)
 x0[1] = deg2rad(80)
 x0[2] = deg2rad(80)
 x0[3] = -deg2rad(80)
-x0[4] = 0
+x0[4] = deg2rad(10)
 
 x0
 
@@ -65,27 +65,11 @@ numerical_specified = zeros(6)
 print ('calculating jacobian for the right ankle')
 F0 = ankle_right.pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
 F0 = Matrix([F0[0], F0[1]])
-F0
-#%%
-J_ankleRight = F0.jacobian([theta0, theta1, theta2, theta3, phi])
-J_ankleRight
-#%% Jacobian for the hip center
-F1 = hip_center.pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
-F1 = Matrix([F1[0], F1[1]])
-F1
-#%%
-J_hipCenter = F1.jacobian([theta0, theta1, theta2, theta3, phi])
-J_hipCenter
-#%% Jacobian for the hip center lighthouse sensor
+J0 = Matrix([F0[0], F0[1]]).jacobian([theta0, theta1, theta2, theta3, phi])
 F1 = lighthouse_sensor[4].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame)
 F1 = Matrix([F1[0], F1[1]])
-F1
-#%%
-J_hipCenter = F1.jacobian([theta0, theta1, theta2, theta3, phi])
-J_hipCenter
-#%% we stack the two jacobians
-J = J_ankleRight.col_join(J_hipCenter)
-J.shape
+J1 = Matrix([F1[0], F1[1]]).jacobian([theta0, theta1, theta2, theta3, phi])
+J = J0.col_join(J1)
 #%% sensor jacobians
 J_lighthouse_sensors = []
 J_lighthouse_sensors.append(lighthouse_sensor[0].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
@@ -99,13 +83,15 @@ J_lighthouse_sensors.append(lighthouse_sensor[7].pos_from(origin).express(inerti
 J_lighthouse_sensors.append(lighthouse_sensor[8].pos_from(origin).express(inertial_frame).simplify().to_matrix(inertial_frame).jacobian([theta0, theta1, theta2, theta3, phi]))
 #%%
 J_lighthouse_sensors[0]
+#%% we stack the two jacobians
+values = {lower_leg_length: 0.32, upper_leg_length: 0.4, hip_length: 0.18, theta0: x0[0], theta1: x0[1], theta2: x0[2], theta3: x0[3], phi: x0[4], ankle_x:0, ankle_y:0}
+J.subs(values).evalf()
 #%% lets try the pseudo inverse with a couple of real values
-values = {lower_leg_length: 0.4, upper_leg_length: 0.54, hip_length: 0.2, theta0: x0[0], theta1: x0[1], theta2: x0[2], theta3: x0[3], phi: x0[4]}
 Jpinv = J.subs(values).evalf().pinv()
 Jpinv
 #%% we stack the two endeffektor points, which we will evaluate in the integration
 F2 = F0.col_join(F1)
-F2
+F2.subs(values).evalf()
 #%% this defines how long you want to simulate, we simulate for one second with 30 fps
 #   simulation can take quite a while...
 frames_per_sec = 30
@@ -139,8 +125,8 @@ kp[2,2] = 10
 kp[3,3] = 10
 kp
 #%%
-kpN = np.zeros((4,4),dtype=float)
-kpN[1,1] = 10
+kpN = np.zeros((5,5),dtype=float)
+kpN[4,4] = 10
 kpN
 #%% These are our target points
 L = 1 # this defines how far apart the left and right ankle should be, y=0 so the 
@@ -179,9 +165,9 @@ def right_hand_side(x, t, args):
                 ankle_x: 0, ankle_y: 0}
     Jpinv = J.subs(values).evalf().pinv()
     ## use this for nullspace movements
-    # N=np.eye(4)-Jpinv*J.subs(values).evalf()
+    N=np.eye(4)-Jpinv*J.subs(values).evalf()
     x_current = F2.subs(values).evalf()
-    dq = np.array(Jpinv*(kp*( x_des - x_current ))).astype(float).T[0]# + N*(kpN*(Matrix([0,-deg2rad(80),0,0,0])-Matrix([x[0],x[1],x[2],x[3])))).astype(float).T[0]
+    dq = np.array(Jpinv*(kp*( x_des - x_current )) + N*(kpN*(Matrix([0,0,0,0,x0[4]])-Matrix([x[0],x[1],x[2],x[3],x[4]])))).astype(float).T[0]
     dq = np.hstack((dq,np.zeros(5,dtype=float)))
     if i%10==0:
         print(x_current)
