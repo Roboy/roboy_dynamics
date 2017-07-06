@@ -43,7 +43,7 @@ bool PaBiRoboyInverseKinematics::inverseKinematics(roboy_communication_middlewar
 //    Vector4d setPoint(initial_position["ankle_right"][0], 0,req.targetPosition.x, req.targetPosition.y);
     // we are trying to keep the ankle_right where it is
     VectorXd setPoint(4);
-    setPoint << initial_position["ankle_right"][0],0,// we set the y desired location to zero
+    setPoint << initial_position["ankle_right"][0],initial_position["ankle_right"][1],// we set the y desired location to zero
             req.targetPosition.x, req.targetPosition.y;
 
     double kp = 10;
