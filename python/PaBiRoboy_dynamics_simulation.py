@@ -165,9 +165,9 @@ def right_hand_side(x, t, args):
                 ankle_x: 0, ankle_y: 0}
     Jpinv = J.subs(values).evalf().pinv()
     ## use this for nullspace movements
-    N=np.eye(4)-Jpinv*J.subs(values).evalf()
+#    N=np.eye(4)-Jpinv*J.subs(values).evalf()
     x_current = F2.subs(values).evalf()
-    dq = np.array(Jpinv*(kp*( x_des - x_current )) + N*(kpN*(Matrix([0,0,0,0,x0[4]])-Matrix([x[0],x[1],x[2],x[3],x[4]])))).astype(float).T[0]
+    dq = np.array(Jpinv*(kp*( x_des - x_current ))).astype(float).T[0]# + N*(kpN*(Matrix([0,0,0,0,x0[4]])-Matrix([x[0],x[1],x[2],x[3],x[4]])))).astype(float).T[0]
     dq = np.hstack((dq,np.zeros(5,dtype=float)))
     if i%10==0:
         print(x_current)

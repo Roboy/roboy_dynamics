@@ -43,7 +43,7 @@ bool PaBiRoboyInverseKinematics::inverseKinematics(roboy_communication_middlewar
 //    Vector4d setPoint(initial_position["ankle_right"][0], 0,req.targetPosition.x, req.targetPosition.y);
     // we are trying to keep the ankle_right where it is
     VectorXd setPoint(4);
-    setPoint << initial_position["ankle_right"][0],0,// we set the y desired location to zero
+    setPoint << initial_position["ankle_right"][0],initial_position["ankle_right"][1],// we set the y desired location to zero
             req.targetPosition.x, req.targetPosition.y;
 
     double kp = 10;
@@ -117,6 +117,37 @@ bool PaBiRoboyInverseKinematics::inverseKinematics(roboy_communication_middlewar
 
     if(req.inspect)
         visualize();
+    int messageId = 1000;
+    // initial pose
+    Vector3d dir = initial_position["knee_left"]-initial_position["ankle_left"];
+    publishRay(initial_position["ankle_left"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,0,1,0.3),0.1);
+
+    dir = initial_position["hip_left"]-initial_position["knee_left"];
+    publishRay(initial_position["knee_left"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,0,1,0.3),0.1);
+
+    dir = initial_position["hip_right"]-initial_position["hip_left"];
+    publishRay(initial_position["hip_left"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,0,1,0.3),0.1);
+
+    dir = initial_position["hip_right"]-initial_position["knee_right"];
+    publishRay(initial_position["knee_right"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,0,1,0.3),0.1);
+
+    dir = initial_position["knee_right"]-initial_position["ankle_right"];
+    publishRay(initial_position["ankle_right"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,0,1,0.3),0.1);
+    // result pose
+    dir = result_position["knee_left"]-result_position["ankle_left"];
+    publishRay(result_position["ankle_left"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,1,0,0.3),0.1);
+
+    dir = result_position["hip_left"]-result_position["knee_left"];
+    publishRay(result_position["knee_left"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,1,0,0.3),0.1);
+
+    dir = result_position["hip_right"]-result_position["hip_left"];
+    publishRay(result_position["hip_left"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,1,0,0.3),0.1);
+
+    dir = result_position["hip_right"]-result_position["knee_right"];
+    publishRay(result_position["knee_right"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,1,0,0.3),0.1);
+
+    dir = result_position["knee_right"]-result_position["ankle_right"];
+    publishRay(result_position["ankle_right"], dir ,"ankle_left", "ik_solution", messageId++, COLOR(0,1,0,0.3),0.1);
 
     if(error > error_threshold)
         return false;

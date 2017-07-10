@@ -16,11 +16,12 @@
 #include <pcl/console/parse.h>
 #include <thread>
 #include <mutex>
+#include "common_utilities/rviz_visualization.hpp"
 
 using namespace Eigen;
 using namespace std;
 
-class PaBiRoboyInverseKinematics{
+class PaBiRoboyInverseKinematics:public rviz_visualization{
 public:
     PaBiRoboyInverseKinematics();
     ~PaBiRoboyInverseKinematics(){};
