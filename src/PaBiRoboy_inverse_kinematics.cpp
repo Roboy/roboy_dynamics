@@ -74,7 +74,7 @@ bool PaBiRoboyInverseKinematics::inverseKinematics(roboy_communication_middlewar
             lighthouse_sensor(x_current2.data(),req.lighthouse_sensor_id, req.ankle_x, req.ankle_y,q[0],q[1],q[2],q[3],q[4]);
             VectorXd x(4);
             x << x_current1[0], x_current1[1], x_current2[0], x_current2[1];
-            printf("%lf\t%lf\t%lf\t%lf\t\n", x[0], x[1], x[2], x[3]);
+//            printf("%lf\t%lf\t%lf\t%lf\t\n", x[0], x[1], x[2], x[3]);
             MatrixXd J(4,5);
             J << J1, J2;
             MatrixXd Jpinv(5,4);
@@ -97,15 +97,6 @@ bool PaBiRoboyInverseKinematics::inverseKinematics(roboy_communication_middlewar
     joint_position(x_current1.data(),ANKLE_RIGHT, req.ankle_x, req.ankle_y,q[0],q[1],q[2],q[3],q[4]);
     lighthouse_sensor(x_current2.data(),req.lighthouse_sensor_id, req.ankle_x, req.ankle_y,q[0],q[1],q[2],q[3],q[4]);
     x_result << x_current1, x_current2;
-    ROS_INFO("\ninitial_angles: thetas(%lf\t%lf\t%lf\t%lf) phi(%lf)"
-             "\nresult_angles:  thetas(%lf\t%lf\t%lf\t%lf) phi(%lf)"
-             "\ntarget_point:  (%lf\t%lf\t%lf   %lf\t%lf\t%lf)"
-             "\nresult:        (%lf\t%lf\t%lf   %lf\t%lf\t%lf)"
-             "\nerror: %f[m]\niterations: %d",
-             req.initial_angles[0], req.initial_angles[1], req.initial_angles[2], req.initial_angles[3], req.initial_angles[4],
-             q[0],q[1],q[2],q[3],q[4],
-             setPoint[0],setPoint[1],setPoint[2],setPoint[3],setPoint[4],setPoint[5],
-             x_result[0],x_result[1],x_result[2], x_result[3],x_result[4],x_result[5], error, iter);
 
     joint_position(result_position["ankle_left"].data(),ANKLE_LEFT,req.ankle_x,req.ankle_y,q[0],q[1],q[2],q[3],q[4]);
     joint_position(result_position["knee_left"].data(),KNEE_LEFT,req.ankle_x,req.ankle_y,q[0],q[1],q[2],q[3],q[4]);
@@ -115,8 +106,18 @@ bool PaBiRoboyInverseKinematics::inverseKinematics(roboy_communication_middlewar
     joint_position(result_position["knee_right"].data(),KNEE_RIGHT,req.ankle_x,req.ankle_y,q[0],q[1],q[2],q[3],q[4]);
     joint_position(result_position["ankle_right"].data(),ANKLE_RIGHT,req.ankle_x,req.ankle_y,q[0],q[1],q[2],q[3],q[4]);
 
-    if(req.inspect)
+    if(req.inspect) {
+        ROS_INFO("\ninitial_angles: thetas(%lf\t%lf\t%lf\t%lf) phi(%lf)"
+                "\nresult_angles:  thetas(%lf\t%lf\t%lf\t%lf) phi(%lf)"
+                "\ntarget_point:  (%lf\t%lf\t%lf   %lf\t%lf\t%lf)"
+                "\nresult:        (%lf\t%lf\t%lf   %lf\t%lf\t%lf)",
+                          req.initial_angles[0], req.initial_angles[1], req.initial_angles[2], req.initial_angles[3], req.initial_angles[4],
+                          q[0],q[1],q[2],q[3],q[4],
+                          setPoint[0],setPoint[1],setPoint[2],setPoint[3],setPoint[4],setPoint[5],
+                          x_result[0],x_result[1],x_result[2], x_result[3],x_result[4],x_result[5]);
+        ROS_WARN("\nerror: %f[m]\niterations: %d", error, iter);
         visualize();
+    }
     int messageId = 1000;
     // initial pose
     Vector3d dir = initial_position["knee_left"]-initial_position["ankle_left"];
@@ -163,6 +164,10 @@ bool PaBiRoboyInverseKinematics::inverseKinematics(roboy_communication_middlewar
     res.angles.push_back(radiansToDegrees(q[1]));
     res.angles.push_back(radiansToDegrees(q[2]));
     res.angles.push_back(radiansToDegrees(q[3]));
+
+    res.resultPosition.x = x_result[0];
+    res.resultPosition.y = x_result[1];
+    res.resultPosition.z = x_result[2];
     return true;
 }
 
@@ -430,7 +435,6 @@ void PaBiRoboyInverseKinematics::joint_position(double *out, int joint, double a
             out[0] = ankle_x + l1*sin(phi + theta0 + theta1 + theta2 + theta3) - l1*sin(phi) - l2*sin(phi + theta0) + l2*sin(phi + theta0 + theta1 + theta2) + l3*cos(phi + theta0 + theta1);
             out[1] = ankle_y - l1*cos(phi + theta0 + theta1 + theta2 + theta3) + l1*cos(phi) + l2*cos(phi + theta0) - l2*cos(phi + theta0 + theta1 + theta2) + l3*sin(phi + theta0 + theta1);
             out[2] = 0;
-            ROS_INFO("ankle right bitch %lf %lf", out[0], out[1]);
             break;
         default:
             ROS_ERROR("dont know this joint");

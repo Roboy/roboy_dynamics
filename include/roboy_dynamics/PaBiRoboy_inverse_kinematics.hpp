@@ -92,7 +92,7 @@ public:
 private:
     ros::NodeHandlePtr nh;
     ros::ServiceServer ik_srv;
-    const double l1 = 0.32;
+    const double l1 = 0.34;
     const double l2 = 0.40;
     const double l3 = 0.18;
     const double error_threshold = 0.005, max_number_iterations = 100;

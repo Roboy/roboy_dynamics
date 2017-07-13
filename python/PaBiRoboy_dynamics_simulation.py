@@ -27,7 +27,7 @@ constants = [lower_leg_length,
              g]
 constants
 
-numerical_constants = array([0.32,  # lower_leg_length [m]
+numerical_constants = array([0.34,  # lower_leg_length [m]
                              0.40, # upper_leg_length [m]
                              0.18, # hip_length
                              
@@ -51,11 +51,11 @@ specified = [ankle_torque0, knee_torque0, hip_torque0, hip_torque1, knee_torque1
 x0 = zeros(10)
 x0
 
-x0[0] = -deg2rad(80)
-x0[1] = deg2rad(80)
-x0[2] = deg2rad(80)
-x0[3] = -deg2rad(80)
-x0[4] = deg2rad(10)
+x0[0] = -deg2rad(74)
+x0[1] = deg2rad(82)
+x0[2] = deg2rad(76)
+x0[3] = -deg2rad(74)
+x0[4] = deg2rad(2)
 
 x0
 
@@ -84,7 +84,7 @@ J_lighthouse_sensors.append(lighthouse_sensor[8].pos_from(origin).express(inerti
 #%%
 J_lighthouse_sensors[0]
 #%% we stack the two jacobians
-values = {lower_leg_length: 0.32, upper_leg_length: 0.4, hip_length: 0.18, theta0: x0[0], theta1: x0[1], theta2: x0[2], theta3: x0[3], phi: x0[4], ankle_x:0, ankle_y:0}
+values = {lower_leg_length: 0.34, upper_leg_length: 0.4, hip_length: 0.18, theta0: x0[0], theta1: x0[1], theta2: x0[2], theta3: x0[3], phi: x0[4], ankle_x:0, ankle_y:0}
 J.subs(values).evalf()
 #%% lets try the pseudo inverse with a couple of real values
 Jpinv = J.subs(values).evalf().pinv()
@@ -159,7 +159,7 @@ def right_hand_side(x, t, args):
     global i
     r = 0.0                                  # The input force is always zero     
     arguments = np.hstack((x, args))      # States, input, and parameters
-    values = {lower_leg_length: 0.32, upper_leg_length: 0.4, hip_length: 0.18, 
+    values = {lower_leg_length: 0.34, upper_leg_length: 0.4, hip_length: 0.18, 
               theta0: x[0], theta1: x[1], theta2: x[2], theta3: x[3], phi: x[4],
                 omega0: 0, omega1: 0, omega2: 0, omega3: 0, psi: 0,
                 ankle_x: 0, ankle_y: 0}
