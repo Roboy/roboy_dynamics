@@ -76,6 +76,7 @@ public:
      * @param phi angle of lower left leg wrt to inertial_frame.z
      */
     void lighthouse_sensor(double *out, int sensor, double ankle_x, double ankle_y, double phi, double theta0, double theta1, double theta2, double theta3);
+    geometry_msgs::Vector3 lighthouse_sensor(int sensor, double ankle_x, double ankle_y, double phi, double theta0, double theta1, double theta2, double theta3);
 
     void visualize();
 
